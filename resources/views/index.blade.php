@@ -62,15 +62,23 @@
 
   <div class="todo-table">
     <table class="todo-table__inner">
-      <tr class="todo-table__row">
-        <th class="todo-table__header">
-          <span class="todo-table__header-span">Todo</span>
-          <span class="todo-table__header-span">カテゴリ</span>
-        </th>
-      </tr>
+      <thead>
+        <tr class="todo-table__row">
+          <th class="todo-table__header todo-table__header--handle"></th>
+          <th class="todo-table__header">
+            <span class="todo-table__header-span">Todo</span>
+            <span class="todo-table__header-span">カテゴリ</span>
+          </th>
+          <th class="todo-table__header todo-table__header--action"></th>
+        </tr>
+      </thead>
 
+      <tbody id="sortable-todos">
       @foreach ($todos as $todo)
-      <tr class="todo-table__row">
+      <tr class="todo-table__row" data-todo-id="{{ $todo['id'] }}">
+        <td class="todo-table__item todo-table__item--handle">
+          <button class="todo-table__drag-handle" type="button" draggable="true" title="ドラッグして並び替え">↕</button>
+        </td>
         <td class="todo-table__item">
           <form class="update-form" action="/todos/update" method="post">
             @method('PATCH')
@@ -99,7 +107,66 @@
         </td>
       </tr>
       @endforeach
+      </tbody>
     </table>
   </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+  const sortableTodos = document.getElementById('sortable-todos');
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+  let draggingRow = null;
+
+  const saveTodoOrder = () => {
+    const todoIds = [...sortableTodos.querySelectorAll('[data-todo-id]')].map((row) => row.dataset.todoId);
+
+    fetch('/todos/reorder', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+      },
+      body: JSON.stringify({ todo_ids: todoIds }),
+    }).catch(() => {
+      window.location.reload();
+    });
+  };
+
+  sortableTodos.addEventListener('dragstart', (event) => {
+    if (!event.target.classList.contains('todo-table__drag-handle')) {
+      event.preventDefault();
+      return;
+    }
+
+    draggingRow = event.target.closest('.todo-table__row');
+    draggingRow.classList.add('todo-table__row--dragging');
+    event.dataTransfer.effectAllowed = 'move';
+  });
+
+  sortableTodos.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    const targetRow = event.target.closest('.todo-table__row');
+
+    if (!draggingRow || !targetRow || targetRow === draggingRow) {
+      return;
+    }
+
+    const targetRect = targetRow.getBoundingClientRect();
+    const insertAfter = event.clientY > targetRect.top + targetRect.height / 2;
+    sortableTodos.insertBefore(draggingRow, insertAfter ? targetRow.nextSibling : targetRow);
+  });
+
+  sortableTodos.addEventListener('dragend', () => {
+    if (!draggingRow) {
+      return;
+    }
+
+    draggingRow.classList.remove('todo-table__row--dragging');
+    draggingRow = null;
+    saveTodoOrder();
+  });
+</script>
 @endsection

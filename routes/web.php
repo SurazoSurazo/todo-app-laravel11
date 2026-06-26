@@ -7,6 +7,7 @@ use App\Http\Controllers\TodoController;
 Route::get('/', [TodoController::class, 'index']);
 Route::get('/todos/search', [TodoController::class, 'search']);
 Route::post('/todos', [TodoController::class, 'store']);
+Route::patch('/todos/reorder', [TodoController::class, 'reorder']);
 Route::patch('/todos/update', [TodoController::class, 'update']);
 Route::delete('/todos/delete', [TodoController::class, 'destroy']);
 

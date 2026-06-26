@@ -6,12 +6,13 @@ use App\Http\Requests\TodoRequest;
 use App\Models\Category;
 use App\Models\Todo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TodoController extends Controller
 {
     public function index()
     {
-        $todos = Todo::with('category')->get();
+        $todos = Todo::with('category')->orderBy('sort_order')->orderBy('id')->get();
         $categories = Category::all();
 
         return view('index', compact('todos', 'categories'));
@@ -22,6 +23,8 @@ class TodoController extends Controller
         $todos = Todo::with('category')
             ->categorySearch($request->category_id)
             ->keywordSearch($request->keyword)
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->get();
         $categories = Category::all();
 
@@ -31,6 +34,7 @@ class TodoController extends Controller
     public function store(TodoRequest $request)
     {
         $todo = $request->only(['category_id', 'content']);
+        $todo['sort_order'] = Todo::max('sort_order') + 1;
         Todo::create($todo);
 
         return redirect('/')->with('message', 'Todoを作成しました');
@@ -42,6 +46,22 @@ class TodoController extends Controller
         Todo::find($request->id)->update($todo);
 
         return redirect('/')->with('message', 'Todoを更新しました');
+    }
+
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'todo_ids' => ['required', 'array'],
+            'todo_ids.*' => ['integer', 'exists:todos,id'],
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['todo_ids'] as $index => $todoId) {
+                Todo::where('id', $todoId)->update(['sort_order' => $index + 1]);
+            }
+        });
+
+        return response()->json(['message' => 'Todoの並び順を更新しました']);
     }
 
     public function destroy(Request $request)

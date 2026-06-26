@@ -117,11 +117,20 @@
   font-weight: bold;
 }
 
+.todo-table__header--handle,
+.todo-table__item--handle {
+  width: 44px;
+}
+
+.todo-table__header--action {
+  width: 70px;
+}
+
 .todo-table__header-span {
   margin-right: 40%;
 }
 
-.todo-table__item:first-of-type {
+.todo-table__item:nth-of-type(2) {
   padding: 12px;
   width: 90%;
   border-bottom: 1px solid #ddd;
@@ -129,6 +138,28 @@
 
 .todo-table__item {
   border-bottom: 1px solid #ddd;
+}
+
+.todo-table__item--handle {
+  text-align: center;
+}
+
+.todo-table__drag-handle {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  background: #fff;
+  color: #555;
+  cursor: grab;
+}
+
+.todo-table__drag-handle:active {
+  cursor: grabbing;
+}
+
+.todo-table__row--dragging {
+  opacity: 0.5;
 }
 
 .update-form {
