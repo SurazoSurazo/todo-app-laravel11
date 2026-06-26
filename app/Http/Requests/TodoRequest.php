@@ -15,7 +15,8 @@ class TodoRequest extends FormRequest
     {
         return [
             'content' => ['required', 'string', 'max:20'],
-            'category_id' => ['required'],
+            'category_id' => [$this->isMethod('post') ? 'required' : 'sometimes'],
+            'deadline_at' => ['nullable', 'date'],
         ];
     }
 
@@ -26,6 +27,7 @@ class TodoRequest extends FormRequest
             'content.string' => 'Todoを文字列で入力してください',
             'content.max' => 'Todoを20文字以下で入力してください',
             'category_id.required' => 'カテゴリを入力してください',
+            'deadline_at.date' => '期限を正しい日時で入力してください',
         ];
     }
 }

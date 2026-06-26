@@ -33,7 +33,11 @@ class TodoController extends Controller
 
     public function store(TodoRequest $request)
     {
-        $todo = $request->only(['category_id', 'content']);
+        $todo = $request->only([
+            'category_id',
+            'content',
+            'deadline_at',
+        ]);
         $todo['sort_order'] = Todo::max('sort_order') + 1;
         Todo::create($todo);
 
@@ -42,7 +46,10 @@ class TodoController extends Controller
 
     public function update(TodoRequest $request)
     {
-        $todo = $request->only(['content']);
+        $todo = $request->only([
+            'content',
+            'deadline_at',
+        ]);
         Todo::find($request->id)->update($todo);
 
         return redirect('/')->with('message', 'Todoを更新しました');

@@ -13,6 +13,11 @@ class Todo extends Model
         'category_id',
         'content',
         'sort_order',
+        'deadline_at',
+    ];
+
+    protected $casts = [
+        'deadline_at' => 'datetime',
     ];
 
     public function category()
