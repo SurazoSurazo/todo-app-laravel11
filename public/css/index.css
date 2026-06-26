@@ -242,12 +242,15 @@
   padding: 7px 10px;
   width: 100%;
   min-height: 34px;
-  border: 1px solid #111;
   border-radius: 3px;
+  font-size: 12px;
+}
+
+.deadline-picker__button {
+  border: 1px solid #111;
   background: #fff;
   color: #111;
   cursor: pointer;
-  font-size: 12px;
 }
 
 .deadline-picker__value {

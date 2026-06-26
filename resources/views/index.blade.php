@@ -24,9 +24,8 @@
 
 @php
   $oldDeadline = old('deadline_at');
-  $oldDeadlineDate = $oldDeadline && preg_match('/^\d{4}-\d{2}-\d{2}/', $oldDeadline) ? substr($oldDeadline, 0, 10) : '';
-  $oldDeadlineTime = $oldDeadline && preg_match('/(?:T|\s)(\d{2}:\d{2})/', $oldDeadline, $matches) ? $matches[1] : '';
-  $oldDeadlineValue = $oldDeadlineDate ? $oldDeadlineDate . ($oldDeadlineTime ? 'T' . $oldDeadlineTime : '') : '';
+  $oldDeadlineDate = old('deadline_date') ?: ($oldDeadline && preg_match('/^\d{4}-\d{2}-\d{2}/', $oldDeadline) ? substr($oldDeadline, 0, 10) : '');
+  $oldDeadlineTime = old('deadline_time') ?: ($oldDeadline && preg_match('/(?:T|\s)(\d{2}:\d{2})/', $oldDeadline, $matches) ? $matches[1] : '');
   $oldDeadlineLabel = $oldDeadlineDate ? str_replace('-', '/', $oldDeadlineDate) . ($oldDeadlineTime ? ' ' . $oldDeadlineTime : '') : '未設定';
 @endphp
 
@@ -46,8 +45,9 @@
       </select>
       <div class="create-form__deadline">
         <span class="create-form__deadline-label">期限</span>
-        <input class="js-deadline-input" type="hidden" name="deadline_at" value="{{ $oldDeadlineValue }}">
-        <button class="deadline-picker__button js-deadline-open" type="button" data-selected-deadline="{{ $oldDeadlineValue }}">期限を選択</button>
+        <input class="js-deadline-date" type="hidden" name="deadline_date" value="{{ $oldDeadlineDate }}">
+        <input class="js-deadline-time" type="hidden" name="deadline_time" value="{{ $oldDeadlineTime }}">
+        <button class="deadline-picker__button js-deadline-open" type="button">期限を選択</button>
         <span class="deadline-picker__value js-deadline-label">{{ $oldDeadlineLabel }}</span>
       </div>
     </div>
@@ -106,8 +106,9 @@
               <p class="update-form__item-p">{{ $todo['category']['name'] }}</p>
             </div>
             <div class="update-form__item update-form__item--deadline">
-              <input class="js-deadline-input" type="hidden" name="deadline_at" value="{{ $todo->deadline_at?->format('Y-m-d\TH:i') }}">
-              <button class="deadline-picker__button js-deadline-open" type="button" data-selected-deadline="{{ $todo->deadline_at?->format('Y-m-d\TH:i') }}">期限を選択</button>
+              <input class="js-deadline-date" type="hidden" name="deadline_date" value="{{ $todo->deadline_at?->format('Y-m-d') }}">
+              <input class="js-deadline-time" type="hidden" name="deadline_time" value="{{ $todo->deadline_at?->format('H:i') }}">
+              <button class="deadline-picker__button js-deadline-open" type="button">期限を選択</button>
               <span class="deadline-picker__value js-deadline-label">{{ $todo->deadline_at ? $todo->deadline_at->format('Y/m/d H:i') : '未設定' }}</span>
             </div>
             <div class="update-form__button">
@@ -226,8 +227,10 @@
   const calendarClear = calendarModal.querySelector('.js-calendar-clear');
   const calendarApply = calendarModal.querySelector('.js-calendar-apply');
   const calendarTime = calendarModal.querySelector('.js-calendar-time');
-  let activeDeadlineInput = null;
+  let activeDeadlineDateInput = null;
+  let activeDeadlineTimeInput = null;
   let activeDeadlineLabel = null;
+  let activeDeadlineForm = null;
   let visibleCalendarDate = new Date();
   let selectedDeadlineDate = '';
 
@@ -239,19 +242,7 @@
     return `${year}-${month}-${day}`;
   };
 
-  const getDeadlineDate = (deadlineValue) => {
-    return deadlineValue ? deadlineValue.slice(0, 10) : '';
-  };
-
-  const getDeadlineTime = (deadlineValue) => {
-    const timeMatch = deadlineValue?.match(/(?:T|\s)(\d{2}:\d{2})/);
-    return timeMatch ? timeMatch[1] : '';
-  };
-
-  const formatDeadlineLabel = (deadlineValue) => {
-    const dateValue = getDeadlineDate(deadlineValue);
-    const timeValue = getDeadlineTime(deadlineValue);
-
+  const formatDeadlineLabel = (dateValue, timeValue) => {
     if (!dateValue) {
       return '未設定';
     }
@@ -260,17 +251,30 @@
     return `${year}/${month}/${day}${timeValue ? ` ${timeValue}` : ''}`;
   };
 
-  const buildDeadlineValue = (dateValue, timeValue) => {
-    if (!dateValue) {
-      return '';
+  const applyDeadlineValue = () => {
+    if (!activeDeadlineDateInput || !activeDeadlineTimeInput || !activeDeadlineLabel) {
+      return;
     }
 
-    return timeValue ? `${dateValue}T${timeValue}` : dateValue;
+    activeDeadlineDateInput.value = selectedDeadlineDate;
+    activeDeadlineTimeInput.value = calendarTime.value;
+    activeDeadlineLabel.textContent = formatDeadlineLabel(selectedDeadlineDate, calendarTime.value);
   };
 
-  const parseDeadlineValue = (deadlineValue) => {
-    const dateValue = getDeadlineDate(deadlineValue);
+  const submitActiveUpdateForm = () => {
+    if (!activeDeadlineForm || !activeDeadlineForm.classList.contains('update-form')) {
+      return;
+    }
 
+    if (typeof activeDeadlineForm.requestSubmit === 'function') {
+      activeDeadlineForm.requestSubmit();
+      return;
+    }
+
+    activeDeadlineForm.submit();
+  };
+
+  const parseDateValue = (dateValue) => {
     if (!dateValue) {
       return new Date();
     }
@@ -282,7 +286,7 @@
   const renderCalendar = () => {
     const year = visibleCalendarDate.getFullYear();
     const month = visibleCalendarDate.getMonth();
-    const selectedValue = selectedDeadlineDate || getDeadlineDate(activeDeadlineInput?.value || '');
+    const selectedValue = selectedDeadlineDate || activeDeadlineDateInput?.value || '';
     const todayValue = formatDateValue(new Date());
     const firstDate = new Date(year, month, 1);
     const lastDate = new Date(year, month + 1, 0);
@@ -319,12 +323,13 @@
 
   const openCalendar = (button) => {
     const pickerRoot = button.closest('.create-form__deadline, .update-form__item--deadline');
-    activeDeadlineInput = pickerRoot.querySelector('.js-deadline-input');
+    activeDeadlineDateInput = pickerRoot.querySelector('.js-deadline-date');
+    activeDeadlineTimeInput = pickerRoot.querySelector('.js-deadline-time');
     activeDeadlineLabel = pickerRoot.querySelector('.js-deadline-label');
-    const deadlineValue = activeDeadlineInput.value || button.dataset.selectedDeadline || '';
-    selectedDeadlineDate = getDeadlineDate(deadlineValue);
-    calendarTime.value = getDeadlineTime(deadlineValue);
-    visibleCalendarDate = parseDeadlineValue(deadlineValue);
+    activeDeadlineForm = pickerRoot.closest('form');
+    selectedDeadlineDate = activeDeadlineDateInput.value || formatDateValue(new Date());
+    calendarTime.value = activeDeadlineTimeInput.value;
+    visibleCalendarDate = parseDateValue(selectedDeadlineDate);
 
     calendarModal.classList.add('calendar-modal--open');
     calendarModal.setAttribute('aria-hidden', 'false');
@@ -343,12 +348,17 @@
   calendarDays.addEventListener('click', (event) => {
     const dayButton = event.target.closest('.calendar-modal__day');
 
-    if (!dayButton || !activeDeadlineInput || !activeDeadlineLabel) {
+    if (!dayButton || !activeDeadlineDateInput || !activeDeadlineTimeInput || !activeDeadlineLabel) {
       return;
     }
 
     selectedDeadlineDate = dayButton.dataset.date;
+    applyDeadlineValue();
     renderCalendar();
+  });
+
+  calendarTime.addEventListener('input', () => {
+    applyDeadlineValue();
   });
 
   calendarPrev.addEventListener('click', () => {
@@ -362,23 +372,24 @@
   });
 
   calendarClear.addEventListener('click', () => {
-    if (activeDeadlineInput && activeDeadlineLabel) {
-      activeDeadlineInput.value = '';
+    if (activeDeadlineDateInput && activeDeadlineTimeInput && activeDeadlineLabel) {
+      activeDeadlineDateInput.value = '';
+      activeDeadlineTimeInput.value = '';
       activeDeadlineLabel.textContent = '未設定';
     }
 
     closeCalendar();
+    submitActiveUpdateForm();
   });
 
   calendarApply.addEventListener('click', () => {
-    if (!activeDeadlineInput || !activeDeadlineLabel) {
+    if (!activeDeadlineDateInput || !activeDeadlineTimeInput || !activeDeadlineLabel) {
       return;
     }
 
-    const deadlineValue = buildDeadlineValue(selectedDeadlineDate, calendarTime.value);
-    activeDeadlineInput.value = deadlineValue;
-    activeDeadlineLabel.textContent = formatDeadlineLabel(deadlineValue);
+    applyDeadlineValue();
     closeCalendar();
+    submitActiveUpdateForm();
   });
 
   document.querySelectorAll('.js-calendar-close').forEach((button) => {

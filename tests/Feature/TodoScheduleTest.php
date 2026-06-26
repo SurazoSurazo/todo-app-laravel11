@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Todo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class TodoScheduleTest extends TestCase
@@ -18,7 +19,8 @@ class TodoScheduleTest extends TestCase
         $response = $this->post('/todos', [
             'category_id' => $category->id,
             'content' => '会議準備',
-            'deadline_at' => '2026-06-27T18:30',
+            'deadline_date' => '2026-06-27',
+            'deadline_time' => '18:30',
         ]);
 
         $response->assertRedirect('/');
@@ -41,7 +43,8 @@ class TodoScheduleTest extends TestCase
         $response = $this->patch('/todos/update', [
             'id' => $todo->id,
             'content' => '資料作成',
-            'deadline_at' => '2026-06-29T09:15',
+            'deadline_date' => '2026-06-29',
+            'deadline_time' => '09:15',
         ]);
 
         $response->assertRedirect('/');
@@ -50,5 +53,50 @@ class TodoScheduleTest extends TestCase
             'content' => '資料作成',
             'deadline_at' => '2026-06-29 09:15:00',
         ]);
+    }
+
+    public function test_todo_deadline_datetime_can_be_cleared(): void
+    {
+        $category = Category::create(['name' => '仕事']);
+        $todo = Todo::create([
+            'category_id' => $category->id,
+            'content' => '資料作成',
+            'sort_order' => 1,
+            'deadline_at' => '2026-06-29 09:15:00',
+        ]);
+
+        $response = $this->patch('/todos/update', [
+            'id' => $todo->id,
+            'content' => '資料作成',
+            'deadline_date' => '',
+            'deadline_time' => '',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertDatabaseHas('todos', [
+            'id' => $todo->id,
+            'deadline_at' => null,
+        ]);
+    }
+
+    public function test_slack_notification_uses_deadline_at(): void
+    {
+        Http::fake();
+        config(['services.slack.webhook_url' => 'https://example.com/slack']);
+        $category = Category::create(['name' => '仕事']);
+        Todo::create([
+            'category_id' => $category->id,
+            'content' => '期限あり',
+            'sort_order' => 1,
+            'deadline_at' => now()->addHour(),
+        ]);
+
+        $this->artisan('app:test-slack-notification')
+            ->assertExitCode(0);
+
+        Http::assertSentCount(1);
+        Http::assertSent(function ($request) {
+            return str_contains($request['text'], '期限あり');
+        });
     }
 }
