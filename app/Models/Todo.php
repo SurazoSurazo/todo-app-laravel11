@@ -15,6 +15,7 @@ class Todo extends Model
         'content',
         'sort_order',
         'deadline_at',
+        'slack_notified_at',
     ];
 
     protected $casts = [

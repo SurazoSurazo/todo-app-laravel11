@@ -389,7 +389,16 @@
 
     applyDeadlineValue();
     closeCalendar();
-    submitActiveUpdateForm();
+
+    if (activeDeadlineForm.classList.contains('create-form')) {
+      if (typeof activeDeadlineForm.requestSubmit === 'function') {
+        activeDeadlineForm.requestSubmit();
+      } else {
+        activeDeadlineForm.submit();
+      }
+    } else {
+      submitActiveUpdateForm();
+    }
   });
 
   document.querySelectorAll('.js-calendar-close').forEach((button) => {

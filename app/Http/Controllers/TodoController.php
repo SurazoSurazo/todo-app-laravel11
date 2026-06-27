@@ -26,6 +26,7 @@ class TodoController extends Controller
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
+
         $categories = Category::all();
 
         return view('index', compact('todos', 'categories'));
@@ -38,7 +39,9 @@ class TodoController extends Controller
             'content',
             'deadline_at',
         ]);
+
         $todo['sort_order'] = Todo::max('sort_order') + 1;
+
         Todo::create($todo);
 
         return redirect('/')->with('message', 'Todoを作成しました');
@@ -50,6 +53,9 @@ class TodoController extends Controller
             'content',
             'deadline_at',
         ]);
+
+        $todo['slack_notified_at'] = null;
+
         Todo::find($request->id)->update($todo);
 
         return redirect('/')->with('message', 'Todoを更新しました');
@@ -64,7 +70,9 @@ class TodoController extends Controller
 
         DB::transaction(function () use ($validated) {
             foreach ($validated['todo_ids'] as $index => $todoId) {
-                Todo::where('id', $todoId)->update(['sort_order' => $index + 1]);
+                Todo::where('id', $todoId)->update([
+                    'sort_order' => $index + 1,
+                ]);
             }
         });
 
