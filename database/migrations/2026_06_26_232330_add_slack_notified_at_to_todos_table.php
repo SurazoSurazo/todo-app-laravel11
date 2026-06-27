@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('todos', function (Blueprint $table) {
-            $table->timestamp('slack_notified_at')->nullable()->after('due_date');
+            $table->timestamp('slack_notified_at')->nullable()->after('deadline_at');
         });
     }
 
