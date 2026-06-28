@@ -137,7 +137,7 @@
 
 <div class="calendar-modal" id="deadline-calendar" aria-hidden="true">
   <div class="calendar-modal__overlay js-calendar-close"></div>
-  <div class="calendar-modal__content" role="dialog" aria-modal="true" aria-label="期限カレンダー">
+  <form class="calendar-modal__content" role="dialog" aria-modal="true" aria-label="期限カレンダー">
     <div class="calendar-modal__header">
       <button class="calendar-modal__nav js-calendar-prev" type="button" aria-label="前の月">&lt;</button>
       <p class="calendar-modal__title js-calendar-title"></p>
@@ -159,9 +159,9 @@
     </label>
     <div class="calendar-modal__footer">
       <button class="calendar-modal__clear js-calendar-clear" type="button">期限なし</button>
-      <button class="calendar-modal__apply js-calendar-apply" type="button">登録</button>
+      <button class="calendar-modal__apply js-calendar-apply" type="submit">登録</button>
     </div>
-  </div>
+  </form>
 </div>
 @endsection
 
@@ -222,12 +222,12 @@
   });
 
   const calendarModal = document.getElementById('deadline-calendar');
+  const calendarForm = calendarModal.querySelector('.calendar-modal__content');
   const calendarTitle = calendarModal.querySelector('.js-calendar-title');
   const calendarDays = calendarModal.querySelector('.js-calendar-days');
   const calendarPrev = calendarModal.querySelector('.js-calendar-prev');
   const calendarNext = calendarModal.querySelector('.js-calendar-next');
   const calendarClear = calendarModal.querySelector('.js-calendar-clear');
-  const calendarApply = calendarModal.querySelector('.js-calendar-apply');
   const calendarTime = calendarModal.querySelector('.js-calendar-time');
   let activeDeadlineDateInput = null;
   let activeDeadlineTimeInput = null;
@@ -261,6 +261,15 @@
     activeDeadlineDateInput.value = selectedDeadlineDate;
     activeDeadlineTimeInput.value = calendarTime.value;
     activeDeadlineLabel.textContent = formatDeadlineLabel(selectedDeadlineDate, calendarTime.value);
+  };
+
+  const submitCalendarForm = () => {
+    if (typeof calendarForm.requestSubmit === 'function') {
+      calendarForm.requestSubmit();
+      return;
+    }
+
+    calendarForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   };
 
   const submitActiveUpdateForm = () => {
@@ -359,6 +368,22 @@
     renderCalendar();
   });
 
+  calendarDays.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') {
+      return;
+    }
+
+    const dayButton = event.target.closest('.calendar-modal__day');
+
+    if (!dayButton) {
+      return;
+    }
+
+    event.preventDefault();
+    selectedDeadlineDate = dayButton.dataset.date;
+    submitCalendarForm();
+  });
+
   calendarTime.addEventListener('input', () => {
     applyDeadlineValue();
   });
@@ -384,7 +409,9 @@
     submitActiveUpdateForm();
   });
 
-  calendarApply.addEventListener('click', () => {
+  calendarForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+
     if (!activeDeadlineDateInput || !activeDeadlineTimeInput || !activeDeadlineLabel) {
       return;
     }
