@@ -128,9 +128,19 @@
 
 .todo-table__header {
   padding: 12px;
-  width: 20%;
   text-align: left;
   font-weight: bold;
+}
+
+.todo-table__header--main {
+  width: auto;
+}
+
+.todo-table__header-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) 58px;
+  align-items: center;
+  gap: 12px;
 }
 
 .todo-table__header--handle,
@@ -143,8 +153,8 @@
 }
 
 .todo-table__header-span {
-  display: inline-block;
-  margin-right: 36px;
+  display: block;
+  min-width: 0;
 }
 
 .todo-table__item:nth-of-type(2) {
@@ -181,7 +191,7 @@
 
 .update-form {
   display: grid;
-  grid-template-columns: minmax(140px, 1.4fr) 100px minmax(170px, 1fr) 58px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) 58px;
   align-items: center;
   gap: 12px;
 }

@@ -10,7 +10,7 @@ class AddCategoryIdToExistingTodosTable extends Migration
     {
         if (!Schema::hasColumn('todos', 'category_id')) {
             Schema::table('todos', function (Blueprint $table) {
-                $table->foreignId('category_id')->after('id')->constrained()->cascadeOnDelete();
+                $table->foreignId('category_id')->nullable()->after('id')->constrained()->nullOnDelete();
             });
         }
     }

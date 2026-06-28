@@ -6,28 +6,30 @@ use App\Http\Requests\TodoRequest;
 use App\Models\Category;
 use App\Models\Todo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TodoController extends Controller
 {
     public function index()
     {
-        $todos = Todo::with('category')->orderBy('sort_order')->orderBy('id')->get();
-        $categories = Category::all();
+        $todos = $this->orderByNearestDeadline(
+            Todo::with('category')->where('user_id', Auth::id())
+        )->get();
+        $categories = $this->currentUserCategories();
 
         return view('index', compact('todos', 'categories'));
     }
 
     public function search(Request $request)
     {
-        $todos = Todo::with('category')
+        $todos = $this->orderByNearestDeadline(
+            Todo::with('category')->where('user_id', Auth::id())
             ->categorySearch($request->category_id)
             ->keywordSearch($request->keyword)
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
+        )->get();
 
-        $categories = Category::all();
+        $categories = $this->currentUserCategories();
 
         return view('index', compact('todos', 'categories'));
     }
@@ -40,7 +42,9 @@ class TodoController extends Controller
             'deadline_at',
         ]);
 
-        $todo['sort_order'] = Todo::max('sort_order') + 1;
+        $todo['user_id'] = Auth::id();
+
+        $todo['sort_order'] = Todo::where('user_id', Auth::id())->max('sort_order') + 1;
 
         Todo::create($todo);
 
@@ -56,7 +60,7 @@ class TodoController extends Controller
 
         $todo['slack_notified_at'] = null;
 
-        Todo::find($request->id)->update($todo);
+        Todo::where('user_id', Auth::id())->findOrFail($request->id)->update($todo);
 
         return redirect('/')->with('message', 'Todoを更新しました');
     }
@@ -65,14 +69,26 @@ class TodoController extends Controller
     {
         $validated = $request->validate([
             'todo_ids' => ['required', 'array'],
-            'todo_ids.*' => ['integer', 'exists:todos,id'],
+            'todo_ids.*' => ['integer'],
         ]);
+
+        $ownedTodoCount = Todo::where('user_id', Auth::id())
+            ->whereIn('id', $validated['todo_ids'])
+            ->count();
+
+        if ($ownedTodoCount !== count(array_unique($validated['todo_ids']))) {
+            return response()->json([
+                'message' => '指定されたTodoが見つかりません',
+            ], 422);
+        }
 
         DB::transaction(function () use ($validated) {
             foreach ($validated['todo_ids'] as $index => $todoId) {
-                Todo::where('id', $todoId)->update([
-                    'sort_order' => $index + 1,
-                ]);
+                Todo::where('user_id', Auth::id())
+                    ->where('id', $todoId)
+                    ->update([
+                        'sort_order' => $index + 1,
+                    ]);
             }
         });
 
@@ -81,8 +97,21 @@ class TodoController extends Controller
 
     public function destroy(Request $request)
     {
-        Todo::find($request->id)->delete();
+        Todo::where('user_id', Auth::id())->findOrFail($request->id)->delete();
 
         return redirect('/')->with('message', 'Todoを削除しました');
+    }
+
+    private function currentUserCategories()
+    {
+        return Category::where('user_id', Auth::id())->get();
+    }
+
+    private function orderByNearestDeadline($query)
+    {
+        return $query
+            ->orderByRaw('deadline_at IS NULL')
+            ->orderBy('deadline_at')
+            ->orderBy('id');
     }
 }

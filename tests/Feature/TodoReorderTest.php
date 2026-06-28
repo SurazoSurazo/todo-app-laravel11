@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Todo;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,19 +14,25 @@ class TodoReorderTest extends TestCase
 
     public function test_todos_can_be_reordered(): void
     {
-        $category = Category::create(['name' => '仕事']);
+        $user = User::factory()->create();
+        $category = Category::create([
+            'user_id' => $user->id,
+            'name' => '仕事',
+        ]);
         $firstTodo = Todo::create([
+            'user_id' => $user->id,
             'category_id' => $category->id,
             'content' => 'first',
             'sort_order' => 1,
         ]);
         $secondTodo = Todo::create([
+            'user_id' => $user->id,
             'category_id' => $category->id,
             'content' => 'second',
             'sort_order' => 2,
         ]);
 
-        $response = $this->patchJson('/todos/reorder', [
+        $response = $this->actingAs($user)->patchJson('/todos/reorder', [
             'todo_ids' => [$secondTodo->id, $firstTodo->id],
         ]);
 

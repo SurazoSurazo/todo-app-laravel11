@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class TodoRequest extends FormRequest
 {
@@ -29,7 +31,10 @@ class TodoRequest extends FormRequest
     {
         return [
             'content' => ['required', 'string', 'max:20'],
-            'category_id' => [$this->isMethod('post') ? 'required' : 'sometimes'],
+            'category_id' => [
+                $this->isMethod('post') ? 'required' : 'sometimes',
+                Rule::exists('categories', 'id')->where(fn ($query) => $query->where('user_id', Auth::id())),
+            ],
             'deadline_date' => ['nullable', 'date'],
             'deadline_time' => ['nullable', 'date_format:H:i'],
             'deadline_at' => ['nullable', 'date'],
@@ -43,6 +48,7 @@ class TodoRequest extends FormRequest
             'content.string' => 'Todoを文字列で入力してください',
             'content.max' => 'Todoを20文字以下で入力してください',
             'category_id.required' => 'カテゴリを入力してください',
+            'category_id.exists' => 'カテゴリを正しく選択してください',
             'deadline_date.date' => '期限日を正しい日付で入力してください',
             'deadline_time.date_format' => '期限時刻を正しい時刻で入力してください',
             'deadline_at.date' => '期限を正しい日時で入力してください',

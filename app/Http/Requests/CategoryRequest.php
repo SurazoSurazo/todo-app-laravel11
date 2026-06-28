@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryRequest extends FormRequest
 {
@@ -19,7 +20,9 @@ class CategoryRequest extends FormRequest
                 'required',
                 'string',
                 'max:10',
-                Rule::unique('categories')->ignore($this->id),
+                Rule::unique('categories')
+                    ->where(fn ($query) => $query->where('user_id', Auth::id()))
+                    ->ignore($this->id),
             ],
         ];
     }

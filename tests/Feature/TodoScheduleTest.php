@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Todo;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -14,9 +15,13 @@ class TodoScheduleTest extends TestCase
 
     public function test_todo_can_be_created_with_deadline_datetime(): void
     {
-        $category = Category::create(['name' => '仕事']);
+        $user = User::factory()->create();
+        $category = Category::create([
+            'user_id' => $user->id,
+            'name' => '仕事',
+        ]);
 
-        $response = $this->post('/todos', [
+        $response = $this->actingAs($user)->post('/todos', [
             'category_id' => $category->id,
             'content' => '会議準備',
             'deadline_date' => '2026-06-27',
@@ -25,6 +30,7 @@ class TodoScheduleTest extends TestCase
 
         $response->assertRedirect('/');
         $this->assertDatabaseHas('todos', [
+            'user_id' => $user->id,
             'category_id' => $category->id,
             'content' => '会議準備',
             'deadline_at' => '2026-06-27 18:30:00',
@@ -33,14 +39,19 @@ class TodoScheduleTest extends TestCase
 
     public function test_todo_deadline_datetime_can_be_updated(): void
     {
-        $category = Category::create(['name' => '仕事']);
+        $user = User::factory()->create();
+        $category = Category::create([
+            'user_id' => $user->id,
+            'name' => '仕事',
+        ]);
         $todo = Todo::create([
+            'user_id' => $user->id,
             'category_id' => $category->id,
             'content' => '会議準備',
             'sort_order' => 1,
         ]);
 
-        $response = $this->patch('/todos/update', [
+        $response = $this->actingAs($user)->patch('/todos/update', [
             'id' => $todo->id,
             'content' => '資料作成',
             'deadline_date' => '2026-06-29',
@@ -57,15 +68,20 @@ class TodoScheduleTest extends TestCase
 
     public function test_todo_deadline_datetime_can_be_cleared(): void
     {
-        $category = Category::create(['name' => '仕事']);
+        $user = User::factory()->create();
+        $category = Category::create([
+            'user_id' => $user->id,
+            'name' => '仕事',
+        ]);
         $todo = Todo::create([
+            'user_id' => $user->id,
             'category_id' => $category->id,
             'content' => '資料作成',
             'sort_order' => 1,
             'deadline_at' => '2026-06-29 09:15:00',
         ]);
 
-        $response = $this->patch('/todos/update', [
+        $response = $this->actingAs($user)->patch('/todos/update', [
             'id' => $todo->id,
             'content' => '資料作成',
             'deadline_date' => '',

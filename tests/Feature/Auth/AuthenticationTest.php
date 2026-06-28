@@ -9,15 +9,17 @@ test('login screen can be rendered', function () {
 });
 
 test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'email' => 'test@example.com',
+    ]);
 
     $response = $this->post('/login', [
-        'email' => $user->email,
+        'email' => 'Test@Example.com',
         'password' => 'password',
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect('/');
 });
 
 test('users can not authenticate with invalid password', function () {
@@ -31,6 +33,20 @@ test('users can not authenticate with invalid password', function () {
     $this->assertGuest();
 });
 
+test('authenticated users can see the logout dropdown', function () {
+    $user = User::factory()->create([
+        'name' => 'Test User',
+    ]);
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertOk();
+    $response->assertSee('Test User');
+    $response->assertSee('action="' . route('logout') . '"', false);
+    $response->assertSee('method="POST"', false);
+    $response->assertSee('ログアウト');
+});
+
 test('users can logout', function () {
     $user = User::factory()->create();
 
@@ -38,4 +54,9 @@ test('users can logout', function () {
 
     $this->assertGuest();
     $response->assertRedirect('/');
+
+    $this->followingRedirects()
+        ->get('/')
+        ->assertOk()
+        ->assertSee('Log in');
 });

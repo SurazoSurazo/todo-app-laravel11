@@ -79,10 +79,12 @@
       <thead>
         <tr class="todo-table__row">
           <th class="todo-table__header todo-table__header--handle"></th>
-          <th class="todo-table__header">
-            <span class="todo-table__header-span">Todo</span>
-            <span class="todo-table__header-span">カテゴリ</span>
-            <span class="todo-table__header-span">期限</span>
+          <th class="todo-table__header todo-table__header--main">
+            <div class="todo-table__header-grid">
+              <span class="todo-table__header-span">Todo</span>
+              <span class="todo-table__header-span">カテゴリ</span>
+              <span class="todo-table__header-span">期限</span>
+            </div>
           </th>
           <th class="todo-table__header todo-table__header--action"></th>
         </tr>
@@ -103,7 +105,7 @@
               <input type="hidden" name="id" value="{{ $todo['id'] }}">
             </div>
             <div class="update-form__item">
-              <p class="update-form__item-p">{{ $todo['category']['name'] }}</p>
+              <p class="update-form__item-p">{{ $todo->category?->name ?? '未分類' }}</p>
             </div>
             <div class="update-form__item update-form__item--deadline">
               <input class="js-deadline-date" type="hidden" name="deadline_date" value="{{ $todo->deadline_at?->format('Y-m-d') }}">
