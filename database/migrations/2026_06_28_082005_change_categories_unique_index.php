@@ -3,24 +3,47 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('DROP INDEX IF EXISTS categories_name_unique');
+        if ($indexName = $this->uniqueIndexName(['name'])) {
+            Schema::table('categories', function (Blueprint $table) use ($indexName) {
+                $table->dropUnique($indexName);
+            });
+        }
 
-        Schema::table('categories', function (Blueprint $table) {
-            $table->unique(['user_id', 'name']);
-        });
+        if (! $this->uniqueIndexName(['user_id', 'name'])) {
+            Schema::table('categories', function (Blueprint $table) {
+                $table->unique(['user_id', 'name']);
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('categories', function (Blueprint $table) {
-            $table->dropUnique(['user_id', 'name']);
-            $table->unique('name');
-        });
+        if ($indexName = $this->uniqueIndexName(['user_id', 'name'])) {
+            Schema::table('categories', function (Blueprint $table) use ($indexName) {
+                $table->dropUnique($indexName);
+            });
+        }
+
+        if (! $this->uniqueIndexName(['name'])) {
+            Schema::table('categories', function (Blueprint $table) {
+                $table->unique('name');
+            });
+        }
+    }
+
+    private function uniqueIndexName(array $columns): ?string
+    {
+        foreach (Schema::getIndexes('categories') as $index) {
+            if (($index['unique'] ?? false) && $index['columns'] === $columns) {
+                return $index['name'];
+            }
+        }
+
+        return null;
     }
 };
