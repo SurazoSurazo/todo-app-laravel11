@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Todo;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -15,6 +16,13 @@ class TodoRequest extends FormRequest
 
     protected function prepareForValidation()
     {
+        if ($this->isMethod('post')) {
+            $this->merge([
+                'status' => $this->input('status', Todo::STATUS_NOT_STARTED),
+                'priority' => $this->input('priority', Todo::PRIORITY_MEDIUM),
+            ]);
+        }
+
         if ($this->has('deadline_date')) {
             $deadlineDate = $this->input('deadline_date');
             $deadlineTime = $this->input('deadline_time');
@@ -31,6 +39,8 @@ class TodoRequest extends FormRequest
     {
         return [
             'content' => ['required', 'string', 'max:20'],
+            'status' => ['sometimes', Rule::in(Todo::STATUSES)],
+            'priority' => ['sometimes', Rule::in(Todo::PRIORITIES)],
             'category_id' => [
                 $this->isMethod('post') ? 'required' : 'sometimes',
                 Rule::exists('categories', 'id')->where(fn ($query) => $query->where('user_id', Auth::id())),
@@ -47,6 +57,8 @@ class TodoRequest extends FormRequest
             'content.required' => 'Todoを入力してください',
             'content.string' => 'Todoを文字列で入力してください',
             'content.max' => 'Todoを20文字以下で入力してください',
+            'status.in' => '状態を正しく選択してください',
+            'priority.in' => '優先度を正しく選択してください',
             'category_id.required' => 'カテゴリを入力してください',
             'category_id.exists' => 'カテゴリを正しく選択してください',
             'deadline_date.date' => '期限日を正しい日付で入力してください',

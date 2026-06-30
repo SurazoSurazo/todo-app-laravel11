@@ -23,10 +23,14 @@
 </div>
 
 @php
+  $todoStatuses = \App\Models\Todo::STATUSES;
+  $todoPriorities = \App\Models\Todo::PRIORITIES;
   $oldDeadline = old('deadline_at');
   $oldDeadlineDate = old('deadline_date') ?: ($oldDeadline && preg_match('/^\d{4}-\d{2}-\d{2}/', $oldDeadline) ? substr($oldDeadline, 0, 10) : '');
   $oldDeadlineTime = old('deadline_time') ?: ($oldDeadline && preg_match('/(?:T|\s)(\d{2}:\d{2})/', $oldDeadline, $matches) ? $matches[1] : '');
   $oldDeadlineLabel = $oldDeadlineDate ? str_replace('-', '/', $oldDeadlineDate) . ($oldDeadlineTime ? ' ' . $oldDeadlineTime : '') : '未設定';
+  $oldStatus = old('status', \App\Models\Todo::STATUS_NOT_STARTED);
+  $oldPriority = old('priority', \App\Models\Todo::PRIORITY_MEDIUM);
 @endphp
 
 <div class="todo__content">
@@ -41,6 +45,16 @@
         <option value="">カテゴリ</option>
         @foreach ($categories as $category)
         <option value="{{ $category['id'] }}" @if (old('category_id') == $category['id']) selected @endif>{{ $category['name'] }}</option>
+        @endforeach
+      </select>
+      <select class="create-form__item-select js-submit-on-enter" name="status">
+        @foreach ($todoStatuses as $status)
+        <option value="{{ $status }}" @if ($oldStatus === $status) selected @endif>{{ $status }}</option>
+        @endforeach
+      </select>
+      <select class="create-form__item-select js-submit-on-enter" name="priority">
+        @foreach ($todoPriorities as $priority)
+        <option value="{{ $priority }}" @if ($oldPriority === $priority) selected @endif>優先度: {{ $priority }}</option>
         @endforeach
       </select>
       <div class="create-form__deadline">
@@ -83,6 +97,8 @@
             <div class="todo-table__header-grid">
               <span class="todo-table__header-span">Todo</span>
               <span class="todo-table__header-span">カテゴリ</span>
+              <span class="todo-table__header-span">状態</span>
+              <span class="todo-table__header-span">優先度</span>
               <span class="todo-table__header-span">期限</span>
             </div>
           </th>
@@ -106,6 +122,20 @@
             </div>
             <div class="update-form__item">
               <p class="update-form__item-p">{{ $todo->category?->name ?? '未分類' }}</p>
+            </div>
+            <div class="update-form__item">
+              <select class="update-form__item-select js-submit-on-enter" name="status">
+                @foreach ($todoStatuses as $status)
+                <option value="{{ $status }}" @if ($todo->status === $status) selected @endif>{{ $status }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="update-form__item">
+              <select class="update-form__item-select js-submit-on-enter" name="priority">
+                @foreach ($todoPriorities as $priority)
+                <option value="{{ $priority }}" @if ($todo->priority === $priority) selected @endif>{{ $priority }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="update-form__item update-form__item--deadline">
               <input class="js-deadline-date" type="hidden" name="deadline_date" value="{{ $todo->deadline_at?->format('Y-m-d') }}">
@@ -166,6 +196,15 @@
   const sortableTodos = document.getElementById('sortable-todos');
   const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
   let draggingRow = null;
+
+  const submitForm = (form) => {
+    if (typeof form.requestSubmit === 'function') {
+      form.requestSubmit();
+      return;
+    }
+
+    form.submit();
+  };
 
   const saveTodoOrder = () => {
     const todoIds = [...sortableTodos.querySelectorAll('[data-todo-id]')].map((row) => row.dataset.todoId);
@@ -273,12 +312,7 @@
       return;
     }
 
-    if (typeof activeDeadlineForm.requestSubmit === 'function') {
-      activeDeadlineForm.requestSubmit();
-      return;
-    }
-
-    activeDeadlineForm.submit();
+    submitForm(activeDeadlineForm);
   };
 
   const parseDateValue = (dateValue) => {
@@ -425,14 +459,21 @@
     closeCalendar();
 
     if (activeDeadlineForm.classList.contains('create-form')) {
-      if (typeof activeDeadlineForm.requestSubmit === 'function') {
-        activeDeadlineForm.requestSubmit();
-      } else {
-        activeDeadlineForm.submit();
-      }
+      submitForm(activeDeadlineForm);
     } else {
       submitActiveUpdateForm();
     }
+  });
+
+  document.querySelectorAll('.js-submit-on-enter').forEach((input) => {
+    input.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') {
+        return;
+      }
+
+      event.preventDefault();
+      submitForm(input.closest('form'));
+    });
   });
 
   document.querySelectorAll('.js-calendar-close').forEach((button) => {

@@ -39,6 +39,8 @@ class TodoController extends Controller
         $todo = $request->only([
             'category_id',
             'content',
+            'status',
+            'priority',
             'deadline_at',
         ]);
 
@@ -55,6 +57,8 @@ class TodoController extends Controller
     {
         $todo = $request->only([
             'content',
+            'status',
+            'priority',
             'deadline_at',
         ]);
 

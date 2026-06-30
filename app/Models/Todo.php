@@ -10,10 +10,30 @@ class Todo extends Model
 {
     use HasFactory;
 
+    public const STATUS_NOT_STARTED = '未対応';
+    public const STATUS_IN_PROGRESS = '処理中';
+    public const STATUS_DONE = '処理済み';
+    public const STATUSES = [
+        self::STATUS_NOT_STARTED,
+        self::STATUS_IN_PROGRESS,
+        self::STATUS_DONE,
+    ];
+
+    public const PRIORITY_HIGH = '高';
+    public const PRIORITY_MEDIUM = '中';
+    public const PRIORITY_LOW = '低';
+    public const PRIORITIES = [
+        self::PRIORITY_HIGH,
+        self::PRIORITY_MEDIUM,
+        self::PRIORITY_LOW,
+    ];
+
     protected $fillable = [
         'user_id',
         'category_id',
         'content',
+        'status',
+        'priority',
         'sort_order',
         'deadline_at',
         'slack_notified_at',
