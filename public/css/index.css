@@ -111,6 +111,8 @@
 }
 
 .todo-table {
+  --todo-table-columns: minmax(0, 1fr) 150px 150px 130px 220px;
+
   margin: 30px auto;
   width: 90%;
   max-width: 1100px;
@@ -138,7 +140,7 @@
 
 .todo-table__header-grid {
   display: grid;
-  grid-template-columns: minmax(140px, 1.3fr) minmax(90px, 1fr) minmax(86px, 0.8fr) minmax(72px, 0.7fr) minmax(160px, 1.4fr);
+  grid-template-columns: var(--todo-table-columns);
   align-items: center;
   gap: 12px;
 }
@@ -191,7 +193,7 @@
 
 .update-form {
   display: grid;
-  grid-template-columns: minmax(140px, 1.3fr) minmax(90px, 1fr) minmax(86px, 0.8fr) minmax(72px, 0.7fr) minmax(160px, 1.4fr);
+  grid-template-columns: var(--todo-table-columns);
   align-items: center;
   gap: 12px;
 }
@@ -429,6 +431,6 @@
   }
 
   .todo-table__inner {
-    min-width: 980px;
+    min-width: 1120px;
   }
 }
