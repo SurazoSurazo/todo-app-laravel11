@@ -113,9 +113,6 @@
               <button class="deadline-picker__button js-deadline-open" type="button">期限を選択</button>
               <span class="deadline-picker__value js-deadline-label">{{ $todo->deadline_at ? $todo->deadline_at->format('Y/m/d H:i') : '未設定' }}</span>
             </div>
-            <div class="update-form__button">
-              <button class="update-form__button-submit" type="submit">更新</button>
-            </div>
           </form>
         </td>
         <td class="todo-table__item">
@@ -159,7 +156,6 @@
     </label>
     <div class="calendar-modal__footer">
       <button class="calendar-modal__clear js-calendar-clear" type="button">期限なし</button>
-      <button class="calendar-modal__apply js-calendar-apply" type="submit">登録</button>
     </div>
   </form>
 </div>
@@ -386,6 +382,15 @@
 
   calendarTime.addEventListener('input', () => {
     applyDeadlineValue();
+  });
+
+  calendarTime.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') {
+      return;
+    }
+
+    event.preventDefault();
+    submitCalendarForm();
   });
 
   calendarPrev.addEventListener('click', () => {
