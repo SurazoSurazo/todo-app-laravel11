@@ -142,6 +142,7 @@
   display: grid;
   grid-template-columns: var(--todo-table-columns);
   align-items: center;
+  justify-items: center;
   gap: 12px;
 }
 
