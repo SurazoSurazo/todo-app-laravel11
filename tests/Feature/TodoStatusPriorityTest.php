@@ -12,7 +12,7 @@ class TodoStatusPriorityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_todo_is_created_with_default_status_and_priority(): void
+    public function test_todo_is_created_without_status_and_priority_by_default(): void
     {
         $user = User::factory()->create();
         $category = Category::create([
@@ -30,8 +30,8 @@ class TodoStatusPriorityTest extends TestCase
             'user_id' => $user->id,
             'category_id' => $category->id,
             'content' => '資料作成',
-            'status' => Todo::STATUS_NOT_STARTED,
-            'priority' => Todo::PRIORITY_MEDIUM,
+            'status' => null,
+            'priority' => null,
         ]);
     }
 
@@ -68,6 +68,37 @@ class TodoStatusPriorityTest extends TestCase
             'content' => 'レビュー完了',
             'status' => Todo::STATUS_DONE,
             'priority' => Todo::PRIORITY_LOW,
+        ]);
+    }
+
+    public function test_todo_status_and_priority_can_be_cleared(): void
+    {
+        $user = User::factory()->create();
+        $category = Category::create([
+            'user_id' => $user->id,
+            'name' => '仕事',
+        ]);
+        $todo = Todo::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'content' => 'レビュー',
+            'status' => Todo::STATUS_IN_PROGRESS,
+            'priority' => Todo::PRIORITY_HIGH,
+            'sort_order' => 1,
+        ]);
+
+        $response = $this->actingAs($user)->patch('/todos/update', [
+            'id' => $todo->id,
+            'content' => 'レビュー',
+            'status' => '',
+            'priority' => '',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertDatabaseHas('todos', [
+            'id' => $todo->id,
+            'status' => null,
+            'priority' => null,
         ]);
     }
 

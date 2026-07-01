@@ -123,6 +123,7 @@
             </div>
             <div class="update-form__item">
               <select class="update-form__item-select js-submit-on-enter js-colored-select {{ $todoStatusColorClasses[$todo->status] ?? '' }}" name="status" data-color-group="status">
+                <option value="" @if (blank($todo->status)) selected @endif></option>
                 @foreach ($todoStatuses as $status)
                 <option value="{{ $status }}" @if ($todo->status === $status) selected @endif>{{ $status }}</option>
                 @endforeach
@@ -130,6 +131,7 @@
             </div>
             <div class="update-form__item">
               <select class="update-form__item-select js-submit-on-enter js-colored-select {{ $todoPriorityColorClasses[$todo->priority] ?? '' }}" name="priority" data-color-group="priority">
+                <option value="" @if (blank($todo->priority)) selected @endif></option>
                 @foreach ($todoPriorities as $priority)
                 <option value="{{ $priority }}" @if ($todo->priority === $priority) selected @endif>{{ $priority }}</option>
                 @endforeach
