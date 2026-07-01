@@ -304,6 +304,10 @@
   white-space: nowrap;
 }
 
+.deadline-picker__value--expired {
+  color: #DC2626;
+}
+
 .calendar-modal {
   display: none;
 }

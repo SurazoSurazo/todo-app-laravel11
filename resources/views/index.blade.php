@@ -140,7 +140,7 @@
               <input class="js-deadline-date" type="hidden" name="deadline_date" value="{{ $todo->deadline_at?->format('Y-m-d') }}">
               <input class="js-deadline-time" type="hidden" name="deadline_time" value="{{ $todo->deadline_at?->format('H:i') }}">
               <button class="deadline-picker__button js-deadline-open" type="button">期限を選択</button>
-              <span class="deadline-picker__value js-deadline-label">{{ $todo->deadline_at ? $todo->deadline_at->format('Y/m/d H:i') : '未設定' }}</span>
+              <span class="deadline-picker__value js-deadline-label @if ($todo->deadline_at && $todo->deadline_at->lt(now()) && $todo->status !== \App\Models\Todo::STATUS_DONE) deadline-picker__value--expired @endif">{{ $todo->deadline_at ? $todo->deadline_at->format('Y/m/d H:i') : '未設定' }}</span>
             </div>
           </form>
         </td>
