@@ -159,6 +159,75 @@ class TodoScheduleTest extends TestCase
         ]);
     }
 
+    public function test_expired_todo_status_and_priority_can_be_updated_without_deadline_validation(): void
+    {
+        Carbon::setTestNow('2026-07-01 12:30:00');
+        $user = User::factory()->create();
+        $category = Category::create([
+            'user_id' => $user->id,
+            'name' => '仕事',
+        ]);
+        $todo = Todo::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'content' => '資料作成',
+            'status' => Todo::STATUS_NOT_STARTED,
+            'priority' => null,
+            'sort_order' => 1,
+            'deadline_at' => '2026-06-30 11:00:00',
+        ]);
+
+        $response = $this->actingAs($user)->patch('/todos/update', [
+            'id' => $todo->id,
+            'content' => '資料作成',
+            'status' => Todo::STATUS_DONE,
+            'priority' => Todo::PRIORITY_HIGH,
+            'deadline_date' => '2026-06-30',
+            'deadline_time' => '11:00',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertDatabaseHas('todos', [
+            'id' => $todo->id,
+            'status' => Todo::STATUS_DONE,
+            'priority' => Todo::PRIORITY_HIGH,
+            'deadline_at' => '2026-06-30 11:00:00',
+        ]);
+    }
+
+    public function test_expired_todo_deadline_cannot_be_changed_to_another_past_datetime(): void
+    {
+        Carbon::setTestNow('2026-07-01 12:30:00');
+        $user = User::factory()->create();
+        $category = Category::create([
+            'user_id' => $user->id,
+            'name' => '仕事',
+        ]);
+        $todo = Todo::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'content' => '資料作成',
+            'status' => Todo::STATUS_NOT_STARTED,
+            'sort_order' => 1,
+            'deadline_at' => '2026-06-30 11:00:00',
+        ]);
+
+        $response = $this->actingAs($user)->from('/')->patch('/todos/update', [
+            'id' => $todo->id,
+            'content' => '資料作成',
+            'status' => Todo::STATUS_NOT_STARTED,
+            'deadline_date' => '2026-06-30',
+            'deadline_time' => '12:00',
+        ]);
+
+        $response->assertRedirect('/');
+        $response->assertSessionHasErrors('deadline_date');
+        $this->assertDatabaseHas('todos', [
+            'id' => $todo->id,
+            'deadline_at' => '2026-06-30 11:00:00',
+        ]);
+    }
+
     public function test_slack_notification_uses_deadline_at(): void
     {
         Http::fake();

@@ -56,6 +56,10 @@ class TodoRequest extends FormRequest
         $validator->after(function ($validator) {
             $deadlineDate = $this->input('deadline_date');
 
+            if (!$this->shouldValidateDeadlineChronology()) {
+                return;
+            }
+
             if (!$deadlineDate || $validator->errors()->has('deadline_date')) {
                 return;
             }
@@ -79,6 +83,29 @@ class TodoRequest extends FormRequest
                 $validator->errors()->add('deadline_time', '過去の時刻は期限に設定できません');
             }
         });
+    }
+
+    private function shouldValidateDeadlineChronology(): bool
+    {
+        if ($this->isMethod('post')) {
+            return true;
+        }
+
+        if (!$this->has('deadline_date') && !$this->has('deadline_time')) {
+            return false;
+        }
+
+        $todo = Todo::where('user_id', Auth::id())->find($this->input('id'));
+
+        if (!$todo) {
+            return true;
+        }
+
+        $currentDeadlineDate = $todo->deadline_at?->format('Y-m-d') ?? '';
+        $currentDeadlineTime = $todo->deadline_at?->format('H:i') ?? '';
+
+        return $this->input('deadline_date', '') !== $currentDeadlineDate
+            || $this->input('deadline_time', '') !== $currentDeadlineTime;
     }
 
     public function messages()
