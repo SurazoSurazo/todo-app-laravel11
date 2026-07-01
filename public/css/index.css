@@ -220,6 +220,30 @@
   font-size: 13px;
 }
 
+.update-form__item-select--status-not-started {
+  color: #6B7280;
+}
+
+.update-form__item-select--status-in-progress {
+  color: #2563EB;
+}
+
+.update-form__item-select--status-done {
+  color: #16A34A;
+}
+
+.update-form__item-select--priority-high {
+  color: #DC2626;
+}
+
+.update-form__item-select--priority-medium {
+  color: #EA580C;
+}
+
+.update-form__item-select--priority-low {
+  color: #16A34A;
+}
+
 .update-form__item--deadline {
   display: grid;
   grid-template-columns: 94px minmax(0, 1fr);

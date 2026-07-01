@@ -25,6 +25,16 @@
 @php
   $todoStatuses = \App\Models\Todo::STATUSES;
   $todoPriorities = \App\Models\Todo::PRIORITIES;
+  $todoStatusColorClasses = [
+    \App\Models\Todo::STATUS_NOT_STARTED => 'update-form__item-select--status-not-started',
+    \App\Models\Todo::STATUS_IN_PROGRESS => 'update-form__item-select--status-in-progress',
+    \App\Models\Todo::STATUS_DONE => 'update-form__item-select--status-done',
+  ];
+  $todoPriorityColorClasses = [
+    \App\Models\Todo::PRIORITY_HIGH => 'update-form__item-select--priority-high',
+    \App\Models\Todo::PRIORITY_MEDIUM => 'update-form__item-select--priority-medium',
+    \App\Models\Todo::PRIORITY_LOW => 'update-form__item-select--priority-low',
+  ];
   $oldDeadline = old('deadline_at');
   $oldDeadlineDate = old('deadline_date') ?: ($oldDeadline && preg_match('/^\d{4}-\d{2}-\d{2}/', $oldDeadline) ? substr($oldDeadline, 0, 10) : '');
   $oldDeadlineTime = old('deadline_time') ?: ($oldDeadline && preg_match('/(?:T|\s)(\d{2}:\d{2})/', $oldDeadline, $matches) ? $matches[1] : '');
@@ -112,14 +122,14 @@
               <p class="update-form__item-p">{{ $todo->category?->name ?? '未分類' }}</p>
             </div>
             <div class="update-form__item">
-              <select class="update-form__item-select js-submit-on-enter" name="status">
+              <select class="update-form__item-select js-submit-on-enter js-colored-select {{ $todoStatusColorClasses[$todo->status] ?? '' }}" name="status" data-color-group="status">
                 @foreach ($todoStatuses as $status)
                 <option value="{{ $status }}" @if ($todo->status === $status) selected @endif>{{ $status }}</option>
                 @endforeach
               </select>
             </div>
             <div class="update-form__item">
-              <select class="update-form__item-select js-submit-on-enter" name="priority">
+              <select class="update-form__item-select js-submit-on-enter js-colored-select {{ $todoPriorityColorClasses[$todo->priority] ?? '' }}" name="priority" data-color-group="priority">
                 @foreach ($todoPriorities as $priority)
                 <option value="{{ $priority }}" @if ($todo->priority === $priority) selected @endif>{{ $priority }}</option>
                 @endforeach
@@ -462,6 +472,35 @@
       event.preventDefault();
       submitForm(input.closest('form'));
     });
+  });
+
+  const selectColorClasses = {
+    status: {
+      '未対応': 'update-form__item-select--status-not-started',
+      '処理中': 'update-form__item-select--status-in-progress',
+      '処理済み': 'update-form__item-select--status-done',
+    },
+    priority: {
+      '高': 'update-form__item-select--priority-high',
+      '中': 'update-form__item-select--priority-medium',
+      '低': 'update-form__item-select--priority-low',
+    },
+  };
+
+  const updateSelectColor = (select) => {
+    const colorClasses = Object.values(selectColorClasses[select.dataset.colorGroup] || {});
+
+    select.classList.remove(...colorClasses);
+
+    const selectedClass = selectColorClasses[select.dataset.colorGroup]?.[select.value];
+    if (selectedClass) {
+      select.classList.add(selectedClass);
+    }
+  };
+
+  document.querySelectorAll('.js-colored-select').forEach((select) => {
+    updateSelectColor(select);
+    select.addEventListener('change', () => updateSelectColor(select));
   });
 
   document.querySelectorAll('.js-calendar-close').forEach((button) => {
