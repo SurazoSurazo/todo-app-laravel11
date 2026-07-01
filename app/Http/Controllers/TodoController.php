@@ -56,6 +56,7 @@ class TodoController extends Controller
     public function update(TodoRequest $request)
     {
         $todo = $request->only([
+            'category_id',
             'content',
             'status',
             'priority',
