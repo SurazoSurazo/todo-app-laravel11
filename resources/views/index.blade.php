@@ -184,6 +184,7 @@
     </label>
     <div class="calendar-modal__footer">
       <button class="calendar-modal__clear js-calendar-clear" type="button">期限なし</button>
+      <button class="calendar-modal__apply" type="submit">設定</button>
     </div>
   </form>
 </div>

@@ -417,12 +417,19 @@
   margin-top: 16px;
 }
 
-.calendar-modal__clear {
+.calendar-modal__clear,
+.calendar-modal__apply {
   padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 3px;
   background: #fff;
   cursor: pointer;
+}
+
+.calendar-modal__apply {
+  border-color: #111;
+  background: #111;
+  color: #fff;
 }
 
 @media screen and (max-width: 768px) {
