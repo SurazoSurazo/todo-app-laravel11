@@ -17,6 +17,12 @@ class TodoRequest extends FormRequest
 
     protected function prepareForValidation()
     {
+        if ($this->isMethod('post')) {
+            $this->merge([
+                'status' => $this->input('status', Todo::STATUS_NOT_STARTED),
+            ]);
+        }
+
         if ($this->has('deadline_date')) {
             $deadlineDate = $this->input('deadline_date');
             $deadlineTime = $this->input('deadline_time');
@@ -33,7 +39,7 @@ class TodoRequest extends FormRequest
     {
         return [
             'content' => ['required', 'string', 'max:20'],
-            'status' => ['nullable', Rule::in(Todo::STATUSES)],
+            'status' => [$this->isMethod('post') ? 'required' : 'sometimes', Rule::in(Todo::STATUSES)],
             'priority' => ['nullable', Rule::in(Todo::PRIORITIES)],
             'category_id' => [
                 $this->isMethod('post') ? 'required' : 'sometimes',
