@@ -196,10 +196,12 @@
   display: grid;
   grid-template-columns: var(--todo-table-columns);
   align-items: center;
+  justify-items: center;
   gap: 12px;
 }
 
 .update-form__item {
+  width: 100%;
   min-width: 0;
   line-height: 1.4;
 }
@@ -208,6 +210,7 @@
   width: 100%;
   outline: none;
   border: none;
+  text-align: center;
 }
 
 .update-form__item-select {
@@ -219,6 +222,7 @@
   border-radius: 3px;
   background: #fff;
   font-size: 13px;
+  text-align: center;
 }
 
 .update-form__item-select--status-not-started {
@@ -249,12 +253,18 @@
   display: grid;
   grid-template-columns: 94px minmax(0, 1fr);
   align-items: center;
+  justify-items: center;
   gap: 8px;
 }
 
 .update-form__item-p {
-  text-align: left;
+  text-align: center;
   font-size: 13px;
+}
+
+.update-form__item--deadline .deadline-picker__value {
+  width: 100%;
+  text-align: center;
 }
 
 .delete-form__button {
