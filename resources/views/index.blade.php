@@ -278,6 +278,13 @@
     return `${year}-${month}-${day}`;
   };
 
+  const formatTimeValue = (date) => {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${hours}:${minutes}`;
+  };
+
   const formatDeadlineLabel = (dateValue, timeValue) => {
     if (!dateValue) {
       return '未設定';
@@ -297,7 +304,20 @@
     activeDeadlineLabel.textContent = formatDeadlineLabel(selectedDeadlineDate, calendarTime.value);
   };
 
+  const updateDeadlineMinValues = () => {
+    const now = new Date();
+    const todayValue = formatDateValue(now);
+
+    if (activeDeadlineDateInput) {
+      activeDeadlineDateInput.min = todayValue;
+    }
+
+    calendarTime.min = selectedDeadlineDate === todayValue ? formatTimeValue(now) : '';
+  };
+
   const submitCalendarForm = () => {
+    updateDeadlineMinValues();
+
     if (typeof calendarForm.requestSubmit === 'function') {
       calendarForm.requestSubmit();
       return;
@@ -349,6 +369,11 @@
       button.textContent = day;
       button.dataset.date = dateValue;
 
+      if (dateValue < todayValue) {
+        button.disabled = true;
+        button.classList.add('calendar-modal__day--disabled');
+      }
+
       if (dateValue === todayValue) {
         button.classList.add('calendar-modal__day--today');
       }
@@ -367,9 +392,13 @@
     activeDeadlineTimeInput = pickerRoot.querySelector('.js-deadline-time');
     activeDeadlineLabel = pickerRoot.querySelector('.js-deadline-label');
     activeDeadlineForm = pickerRoot.closest('form');
-    selectedDeadlineDate = activeDeadlineDateInput.value || formatDateValue(new Date());
+    const todayValue = formatDateValue(new Date());
+    selectedDeadlineDate = activeDeadlineDateInput.value && activeDeadlineDateInput.value >= todayValue
+      ? activeDeadlineDateInput.value
+      : todayValue;
     calendarTime.value = activeDeadlineTimeInput.value;
     visibleCalendarDate = parseDateValue(selectedDeadlineDate);
+    updateDeadlineMinValues();
 
     calendarModal.classList.add('calendar-modal--open');
     calendarModal.setAttribute('aria-hidden', 'false');
@@ -394,6 +423,7 @@
 
     selectedDeadlineDate = dayButton.dataset.date;
     applyDeadlineValue();
+    updateDeadlineMinValues();
     renderCalendar();
   });
 
@@ -410,6 +440,7 @@
 
     event.preventDefault();
     selectedDeadlineDate = dayButton.dataset.date;
+    updateDeadlineMinValues();
     submitCalendarForm();
   });
 
@@ -428,11 +459,13 @@
 
   calendarPrev.addEventListener('click', () => {
     visibleCalendarDate = new Date(visibleCalendarDate.getFullYear(), visibleCalendarDate.getMonth() - 1, 1);
+    updateDeadlineMinValues();
     renderCalendar();
   });
 
   calendarNext.addEventListener('click', () => {
     visibleCalendarDate = new Date(visibleCalendarDate.getFullYear(), visibleCalendarDate.getMonth() + 1, 1);
+    updateDeadlineMinValues();
     renderCalendar();
   });
 
@@ -445,6 +478,12 @@
 
     closeCalendar();
     submitActiveUpdateForm();
+  });
+
+  calendarForm.addEventListener('click', (event) => {
+    if (event.target.closest('.calendar-modal__apply')) {
+      updateDeadlineMinValues();
+    }
   });
 
   calendarForm.addEventListener('submit', (event) => {

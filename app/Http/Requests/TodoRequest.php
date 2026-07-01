@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Todo;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
@@ -49,6 +50,36 @@ class TodoRequest extends FormRequest
             'deadline_time' => ['nullable', 'date_format:H:i'],
             'deadline_at' => ['nullable', 'date'],
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $deadlineDate = $this->input('deadline_date');
+
+            if (!$deadlineDate || $validator->errors()->has('deadline_date')) {
+                return;
+            }
+
+            $today = Carbon::today();
+            $deadlineDay = Carbon::parse($deadlineDate)->startOfDay();
+
+            if ($deadlineDay->lt($today)) {
+                $validator->errors()->add('deadline_date', '過去の日付は期限に設定できません');
+                return;
+            }
+
+            $deadlineTime = $this->input('deadline_time');
+
+            if (
+                $deadlineDay->isSameDay($today)
+                && $deadlineTime
+                && !$validator->errors()->has('deadline_time')
+                && $deadlineTime < Carbon::now()->format('H:i')
+            ) {
+                $validator->errors()->add('deadline_time', '過去の時刻は期限に設定できません');
+            }
+        });
     }
 
     public function messages()
