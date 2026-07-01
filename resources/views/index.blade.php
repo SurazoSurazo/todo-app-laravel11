@@ -119,17 +119,21 @@
               <input type="hidden" name="id" value="{{ $todo['id'] }}">
             </div>
             <div class="update-form__item">
-              <p class="update-form__item-p">{{ $todo->category?->name ?? '未分類' }}</p>
+              <select class="update-form__item-select js-submit-on-enter js-auto-submit-select" name="category_id">
+                @foreach ($categories as $category)
+                <option value="{{ $category['id'] }}" @if ($todo->category_id == $category['id']) selected @endif>{{ $category['name'] }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="update-form__item">
-              <select class="update-form__item-select js-submit-on-enter js-colored-select {{ $todoStatusColorClasses[$todo->status] ?? '' }}" name="status" data-color-group="status">
+              <select class="update-form__item-select js-submit-on-enter js-auto-submit-select js-colored-select {{ $todoStatusColorClasses[$todo->status] ?? '' }}" name="status" data-color-group="status">
                 @foreach ($todoStatuses as $status)
                 <option value="{{ $status }}" @if ($todo->status === $status) selected @endif>{{ $status }}</option>
                 @endforeach
               </select>
             </div>
             <div class="update-form__item">
-              <select class="update-form__item-select js-submit-on-enter js-colored-select {{ $todoPriorityColorClasses[$todo->priority] ?? '' }}" name="priority" data-color-group="priority">
+              <select class="update-form__item-select js-submit-on-enter js-auto-submit-select js-colored-select {{ $todoPriorityColorClasses[$todo->priority] ?? '' }}" name="priority" data-color-group="priority">
                 <option value="" @if (blank($todo->priority)) selected @endif></option>
                 @foreach ($todoPriorities as $priority)
                 <option value="{{ $priority }}" @if ($todo->priority === $priority) selected @endif>{{ $priority }}</option>
@@ -554,10 +558,11 @@
 
   document.querySelectorAll('.js-colored-select').forEach((select) => {
     updateSelectColor(select);
-    select.addEventListener('change', () => {
-      updateSelectColor(select);
-      scheduleFormSubmit(select.closest('form'));
-    });
+    select.addEventListener('change', () => updateSelectColor(select));
+  });
+
+  document.querySelectorAll('.js-auto-submit-select').forEach((select) => {
+    select.addEventListener('change', () => scheduleFormSubmit(select.closest('form')));
   });
 
   document.querySelectorAll('.js-calendar-close').forEach((button) => {

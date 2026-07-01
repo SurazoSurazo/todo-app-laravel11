@@ -57,6 +57,7 @@ class TodoStatusPriorityTest extends TestCase
 
         $response = $this->actingAs($user)->patch('/todos/update', [
             'id' => $todo->id,
+            'category_id' => $category->id,
             'content' => 'レビュー完了',
             'status' => Todo::STATUS_DONE,
             'priority' => Todo::PRIORITY_LOW,
@@ -89,6 +90,7 @@ class TodoStatusPriorityTest extends TestCase
 
         $response = $this->actingAs($user)->patch('/todos/update', [
             'id' => $todo->id,
+            'category_id' => $category->id,
             'content' => 'レビュー',
             'status' => Todo::STATUS_IN_PROGRESS,
             'priority' => '',
@@ -120,6 +122,7 @@ class TodoStatusPriorityTest extends TestCase
 
         $response = $this->actingAs($user)->from('/')->patch('/todos/update', [
             'id' => $todo->id,
+            'category_id' => $category->id,
             'content' => 'レビュー',
             'status' => '',
             'priority' => '',

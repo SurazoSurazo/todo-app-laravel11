@@ -42,7 +42,7 @@ class TodoRequest extends FormRequest
             'status' => [$this->isMethod('post') ? 'required' : 'sometimes', Rule::in(Todo::STATUSES)],
             'priority' => ['nullable', Rule::in(Todo::PRIORITIES)],
             'category_id' => [
-                $this->isMethod('post') ? 'required' : 'sometimes',
+                'required',
                 Rule::exists('categories', 'id')->where(fn ($query) => $query->where('user_id', Auth::id())),
             ],
             'deadline_date' => ['nullable', 'date'],

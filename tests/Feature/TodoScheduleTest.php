@@ -63,6 +63,7 @@ class TodoScheduleTest extends TestCase
 
         $response = $this->actingAs($user)->patch('/todos/update', [
             'id' => $todo->id,
+            'category_id' => $category->id,
             'content' => '資料作成',
             'deadline_date' => $deadlineDate,
             'deadline_time' => '09:15',
@@ -93,6 +94,7 @@ class TodoScheduleTest extends TestCase
 
         $response = $this->actingAs($user)->patch('/todos/update', [
             'id' => $todo->id,
+            'category_id' => $category->id,
             'content' => '資料作成',
             'deadline_date' => '',
             'deadline_time' => '',
@@ -146,6 +148,7 @@ class TodoScheduleTest extends TestCase
 
         $response = $this->actingAs($user)->from('/')->patch('/todos/update', [
             'id' => $todo->id,
+            'category_id' => $category->id,
             'content' => '資料作成',
             'deadline_date' => '2026-07-01',
             'deadline_time' => '12:29',
@@ -179,6 +182,7 @@ class TodoScheduleTest extends TestCase
 
         $response = $this->actingAs($user)->patch('/todos/update', [
             'id' => $todo->id,
+            'category_id' => $category->id,
             'content' => '資料作成',
             'status' => Todo::STATUS_DONE,
             'priority' => Todo::PRIORITY_HIGH,
@@ -214,6 +218,7 @@ class TodoScheduleTest extends TestCase
 
         $response = $this->actingAs($user)->from('/')->patch('/todos/update', [
             'id' => $todo->id,
+            'category_id' => $category->id,
             'content' => '資料作成',
             'status' => Todo::STATUS_NOT_STARTED,
             'deadline_date' => '2026-06-30',

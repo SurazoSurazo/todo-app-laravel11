@@ -93,6 +93,10 @@ class UserDataIsolationTest extends TestCase
             'user_id' => $daichi->id,
             'name' => 'Daichi用',
         ]);
+        $rinCategory = Category::create([
+            'user_id' => $rin->id,
+            'name' => 'Rin用',
+        ]);
         $todo = Todo::create([
             'user_id' => $daichi->id,
             'category_id' => $daichiCategory->id,
@@ -102,6 +106,7 @@ class UserDataIsolationTest extends TestCase
 
         $this->actingAs($rin)->patch('/todos/update', [
             'id' => $todo->id,
+            'category_id' => $rinCategory->id,
             'content' => '更新できない',
         ])->assertNotFound();
 
