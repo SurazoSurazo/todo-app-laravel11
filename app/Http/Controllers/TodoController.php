@@ -66,7 +66,7 @@ class TodoController extends Controller
 
         Todo::where('user_id', Auth::id())->findOrFail($request->id)->update($todo);
 
-        return redirect('/')->with('message', 'Todoを更新しました');
+        return redirect('/');
     }
 
     public function reorder(Request $request)
