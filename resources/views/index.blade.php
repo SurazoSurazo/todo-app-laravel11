@@ -29,8 +29,6 @@
   $oldDeadlineDate = old('deadline_date') ?: ($oldDeadline && preg_match('/^\d{4}-\d{2}-\d{2}/', $oldDeadline) ? substr($oldDeadline, 0, 10) : '');
   $oldDeadlineTime = old('deadline_time') ?: ($oldDeadline && preg_match('/(?:T|\s)(\d{2}:\d{2})/', $oldDeadline, $matches) ? $matches[1] : '');
   $oldDeadlineLabel = $oldDeadlineDate ? str_replace('-', '/', $oldDeadlineDate) . ($oldDeadlineTime ? ' ' . $oldDeadlineTime : '') : '未設定';
-  $oldStatus = old('status', \App\Models\Todo::STATUS_NOT_STARTED);
-  $oldPriority = old('priority', \App\Models\Todo::PRIORITY_MEDIUM);
 @endphp
 
 <div class="todo__content">
@@ -45,16 +43,6 @@
         <option value="">カテゴリ</option>
         @foreach ($categories as $category)
         <option value="{{ $category['id'] }}" @if (old('category_id') == $category['id']) selected @endif>{{ $category['name'] }}</option>
-        @endforeach
-      </select>
-      <select class="create-form__item-select js-submit-on-enter" name="status">
-        @foreach ($todoStatuses as $status)
-        <option value="{{ $status }}" @if ($oldStatus === $status) selected @endif>{{ $status }}</option>
-        @endforeach
-      </select>
-      <select class="create-form__item-select js-submit-on-enter" name="priority">
-        @foreach ($todoPriorities as $priority)
-        <option value="{{ $priority }}" @if ($oldPriority === $priority) selected @endif>優先度: {{ $priority }}</option>
         @endforeach
       </select>
       <div class="create-form__deadline">
