@@ -205,6 +205,19 @@
     form.submit();
   };
 
+  const formSubmitTimers = new WeakMap();
+
+  const scheduleFormSubmit = (form) => {
+    clearTimeout(formSubmitTimers.get(form));
+
+    const timer = setTimeout(() => {
+      submitForm(form);
+      formSubmitTimers.delete(form);
+    }, 200);
+
+    formSubmitTimers.set(form, timer);
+  };
+
   const saveTodoOrder = () => {
     const todoIds = [...sortableTodos.querySelectorAll('[data-todo-id]')].map((row) => row.dataset.todoId);
 
@@ -540,7 +553,10 @@
 
   document.querySelectorAll('.js-colored-select').forEach((select) => {
     updateSelectColor(select);
-    select.addEventListener('change', () => updateSelectColor(select));
+    select.addEventListener('change', () => {
+      updateSelectColor(select);
+      scheduleFormSubmit(select.closest('form'));
+    });
   });
 
   document.querySelectorAll('.js-calendar-close').forEach((button) => {
